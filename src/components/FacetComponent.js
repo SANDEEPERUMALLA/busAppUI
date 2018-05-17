@@ -3,7 +3,6 @@ import React, {
   Component
 } from 'react';
 import "../../node_modules/bootstrap/dist/css/bootstrap.css";
-
 import axios from 'axios';
 
 import $ from 'jquery';
