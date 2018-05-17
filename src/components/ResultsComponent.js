@@ -23,10 +23,18 @@ export default class ResultsComponent extends React.Component {
       this.state = {
         data: [],
         filterOption: "",
-        options: []
+        options: [],
+        sortState : []
       };
 
       this.travelsSelected = [];
+
+
+      this.sortMap = {
+        'price' : fareSorter,
+        'time' : "",
+        'rating' : ratingSorter
+      }
     }
 
     componentWillMount() {
