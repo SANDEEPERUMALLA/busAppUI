@@ -29,7 +29,6 @@ export default class ResultsComponent extends React.Component {
 
       this.travelsSelected = [];
 
-
       this.state.sortMap = {
         'price' : this.fareSorter,
         'time' : "",
@@ -39,12 +38,10 @@ export default class ResultsComponent extends React.Component {
 
     componentWillMount() {
 
-      console.log("Fetch Buses URL :" + "http://localhost:8080/bus/route?from=" + this.qParams.from + "&to=" + this.qParams.to)
       axios.get("http://localhost:8080/bus/route?from=" + this.qParams.from + "&to=" + this.qParams.to)
         .then((response) => {
 
           var data = response.data;
-
           var itemSize = data.length;
           var noOfPages = Math.ceil(itemSize / 10);
 

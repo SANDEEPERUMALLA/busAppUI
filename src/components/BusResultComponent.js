@@ -14,7 +14,6 @@ constructor(props){
 
 }
 
-
 render(){
 
 var style = {

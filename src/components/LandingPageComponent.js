@@ -21,14 +21,10 @@ class Place {
 
 export default class LandingPageComponent extends React.Component {
 
-
     constructor(props) {
 
-
       super(props);
-
       this.places = [];
-
       this.state = {};
 
     }
@@ -57,13 +53,10 @@ export default class LandingPageComponent extends React.Component {
           this.setState(state);
         });
 
-
     }
-
 
     fetchBuses(e) {
 
-      console.log('from=' + this.fromCity + '&to=' + this.toCity);
       this.props.history.push({
         pathname: '/results',
         search: 'from=' + this.fromCity + '&to=' + this.toCity
@@ -76,9 +69,6 @@ export default class LandingPageComponent extends React.Component {
         .catch(function(error) {
           console.log(error);
         });
-
-
-
     }
 
     handleFromChange(e) {
@@ -137,8 +127,7 @@ export default class LandingPageComponent extends React.Component {
 
 
 
-	render(){
-
+	render() {
 
 			var inputStyle = {
 				width : "200px",

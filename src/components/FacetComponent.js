@@ -4,9 +4,7 @@ import React, {
 } from 'react';
 import "../../node_modules/bootstrap/dist/css/bootstrap.css";
 import axios from 'axios';
-
 import $ from 'jquery';
-
 
 export default class FacetsComponent extends React.Component {
   constructor(props){
