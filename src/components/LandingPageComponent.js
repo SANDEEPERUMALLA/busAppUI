@@ -4,10 +4,6 @@ import axios from 'axios';
 
 import $ from 'jquery'
 
-
-
-
-
 class Place {
 
   constructor(name, code) {
@@ -15,115 +11,90 @@ class Place {
     this.name = name;
     this.code = code;
   }
-  name: String
-  code: String
+  name: String code: String
 }
 
 export default class LandingPageComponent extends React.Component {
 
-    constructor(props) {
+  constructor(props) {
 
-      super(props);
-      this.places = [];
-      this.state = {};
+    super(props);
+    this.places = [];
+    this.state = {};
 
-    }
+  }
 
+  componentDidMount() {
 
-    componentDidMount() {
+    axios.get("http://localhost:8080/place/").then(response => {
 
-      console.log("componentDidMount");
-      axios.get("http://localhost:8080/place/")
-        .then(response => {
+      var rData = response.data;
 
-          console.log(response.data)
-          var rData = response.data;
-
-          this.places = rData.map(item => {
-            console.log("item :" + item.code)
-            var place = new Place(item.name, item.code);
-            console.log(place);
-            return place
-          });
-
-          var state = Object.assign(this.state, {
-            places: this.places
-          });
-
-          this.setState(state);
-        });
-
-    }
-
-    fetchBuses(e) {
-
-      this.props.history.push({
-        pathname: '/results',
-        search: 'from=' + this.fromCity + '&to=' + this.toCity
-      })
-
-      axios.get("http://localhost:8080/bus/route?from=" + this.state.from + "&to=" + this.state.to)
-        .then(function(response) {
-          console.log(response);
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
-    }
-
-    handleFromChange(e) {
-
-      var state = Object.assign(this.state, {
-        from: e.target.value
+      this.places = rData.map(item => {
+        console.log("item :" + item.code)
+        var place = new Place(item.name, item.code);
+        console.log(place);
+        return place
       });
 
+      var state = Object.assign(this.state, {places: this.places});
       this.setState(state);
+    });
 
-      console.log(state);
+  }
 
+  fetchBuses(e) {
 
-    }
+    this.props.history.push({
+      pathname: '/results',
+      search: 'from=' + this.fromCity + '&to=' + this.toCity
+    })
 
-    handleToChange(e) {
-      var state = Object.assign(this.state, {
-        to: e.target.value
-      });
+    axios.get("http://localhost:8080/bus/route?from=" + this.state.from + "&to=" + this.state.to).then(function(response) {
+    
+    }).catch(function(error) {
+      console.log(error);
+    });
+  }
 
-      this.setState(state);
-      console.log(state);
+  handleFromChange(e) {
 
-    }
+    var state = Object.assign(this.state, {from: e.target.value});
+    this.setState(state);
+  }
 
+  handleToChange(e) {
 
-    selectedFromCity(e) {
+    var state = Object.assign(this.state, {to: e.target.value});
+    this.setState(state);
+    console.log(state);
 
-      $(e.currentTarget).css("display", "none");
+  }
 
-      $('[name=from]').val($(e.target).text());
+  selectedFromCity(e) {
 
-      this.fromCity = $(e.target).attr('code');
+    $(e.currentTarget).css("display", "none");
+    $('[name=from]').val($(e.target).text());
+    this.fromCity = $(e.target).attr('code');
 
+  }
 
-    }
+  selectedToCity(e) {
 
-    selectedToCity(e) {
+    $(e.currentTarget).css("display", "none");
+    $('[name=to]').val($(e.target).text());
+    this.toCity = $(e.target).attr('code');
+  }
 
-			  $(e.currentTarget).css("display", "none");
+  showDropDownFrom(e) {
 
-      $('[name=to]').val($(e.target).text());
+    $("#fromlist").css("display", "block");
+  }
 
-      this.toCity = $(e.target).attr('code');
-    }
+  showDropDownTo(e) {
 
-    showDropDownFrom(e) {
-
-      $("#fromlist").css("display", "block");
-    }
-
-		showDropDownTo(e) {
-
-			$("#tolist").css("display", "block");
-		}
+    $("#tolist").css("display", "block");
+  }
 
 
 
