@@ -11,7 +11,8 @@ class Place {
     this.name = name;
     this.code = code;
   }
-  name: String code: String
+  name: String;
+  code: String;
 }
 
 export default class LandingPageComponent extends React.Component {
@@ -51,7 +52,7 @@ export default class LandingPageComponent extends React.Component {
     })
 
     axios.get("http://localhost:8080/bus/route?from=" + this.state.from + "&to=" + this.state.to).then(function(response) {
-    
+
     }).catch(function(error) {
       console.log(error);
     });
