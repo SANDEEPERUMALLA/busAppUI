@@ -50,16 +50,25 @@ export default class ResultsComponent extends React.Component {
           }).map(d => d.travel.name);
           options = _.uniq(options);
 
-          var d = data.slice(0,10);
+        for(var i=0;i<data.length;i++){
+          data[i].index = i;
+        }
 
+          var d = data.slice(0,10);
           var state = Object.assign(this.state, {
+            tData : data,
+            fData: data,
             data: d,
-            bData: data,
+            pageNo : 0,
             options: options,
             filterOption: "Travels",
             noOfPages : noOfPages
           });
+
           this.setState(state);
+
+          console.log(this.state.fData);
+          console.log(this.state.data);
 
         })
         .catch((error) => {
@@ -67,19 +76,44 @@ export default class ResultsComponent extends React.Component {
         });
     }
 
+    doDeepCopy(object){
+      var target = {};
+
+      for(var key in object){
+        if(typeof object[key] === "object"){
+          //var t = doDeepCopy(object[key]);
+          target[key] = object[key];
+        }
+      }
+
+      return target;
+    }
+
+
+    changePageData(){
+
+        var pageNo  = this.state.pageNo;
+        var d = JSON.parse(JSON.stringify(this.state.fData));
+        var lastResult = d.length <  pageNo*10+10 ? d.length : pageNo*10+10;
+        d = d.slice(pageNo*10, lastResult);
+
+        this.updateState({
+            data : d,
+            pageNo : pageNo
+        });
+
+        console.log(this.state.fData);
+        console.log(this.state.data);
+    }
 
     pickPageElement(e) {
       var pageNo = parseInt($(e.target).text());
-      console.log(pageNo+"pageNo");
-      var data = this.state.bData;
-
-      var lastResult = data.length <  pageNo*10+10 ? data.length : pageNo*10+10;
-      data = data.splice(pageNo*10, lastResult);
 
       this.updateState({
-          data : data
+        pageNo : pageNo
       });
 
+      this.changePageData();
 
     }
 
@@ -98,7 +132,14 @@ export default class ResultsComponent extends React.Component {
       }
 
       if (this.travelsSelected.length === 0) {
-        this.sortAndUpdateState(this.state.bData, this.state.sortState);
+        var itemSize = this.state.tData.length;
+        var noOfPages = Math.ceil(itemSize / 10);
+        this.updateState({
+          fData : this.state.tData,
+          noOfPages : noOfPages
+        });
+
+        this.sortAndUpdateState(this.state.fData, this.state.sortState);
         return;
       }
 
@@ -106,9 +147,15 @@ export default class ResultsComponent extends React.Component {
         return this.travelsSelected.indexOf(d.travel.name) !== -1
       };
 
-      var busesFiltered = this.state.bData.filter(travelsFilter);
+      var fData = this.state.tData.filter(travelsFilter);
+      var itemSize = fData.length;
+      var noOfPages = Math.ceil(itemSize / 10);
+      this.updateState({
+        fData : fData,
+        noOfPages : noOfPages
+      })
 
-      this.sortAndUpdateState(busesFiltered,this.state.sortState);
+      this.sortAndUpdateState(fData,this.state.sortState);
     }
 
 
@@ -137,35 +184,27 @@ export default class ResultsComponent extends React.Component {
       }
     }
 
-    sortAndUpdateState(data, sortOption){
+    sortAndUpdateState(data, sortOption) {
 
-      var d = this.state.data;
+      var d = this.state.fData;
       if(this.state.sortMap[sortOption]){
-        d = data.sort(this.state.sortMap[sortOption]());
+        d = d.sort(this.state.sortMap[sortOption]());
       }
 
       this.updateState(
         {
-          data : d,
+          fData : d,
           sortOption : sortOption
         }
       );
 
+      this.changePageData();
+
     }
 
-    updateState(state){
+    updateState(s){
 
-      var stateObject = {};
-
-      if(state.data){
-        stateObject.data = state.data;
-      }
-
-      if(state.sortOption){
-        stateObject.sortState = state.sortOption;
-      }
-
-      var state = Object.assign(this.state, stateObject);
+      var state = Object.assign(this.state, s);
 
         this.setState(state);
 
@@ -174,7 +213,14 @@ export default class ResultsComponent extends React.Component {
 
     handleSort(e) {
       var sortOption = $(e.target).attr('id');
+      this.updateState({
+        pageNo : 0
+      });
         this.sortAndUpdateState(this.state.data, sortOption);
+    }
+
+    handleBooking(){
+
     }
 
 
@@ -184,6 +230,10 @@ export default class ResultsComponent extends React.Component {
       var elems = [];
 
       for(var i=0;i<this.state.noOfPages;i++){
+        if(this.state.pageNo === i){
+            elems.push(<li class="page-item active"><a class="page-link" href="#">{i}</a></li>);
+            continue;
+        }
         elems.push(<li class="page-item"><a class="page-link" href="#">{i}</a></li>);
       }
 
@@ -191,11 +241,37 @@ export default class ResultsComponent extends React.Component {
           clear: 'both'
         }
 
+        var modelPositionStyle = {
+
+          width : '400px',
+          height : '400px'
+        }
+
         var borderStyle = {
           borderRight: '1px solid black'
         };
+
         return (
           <div id="main">
+            <div className="modal" style={modelPositionStyle}  tabindex="-1" role="dialog">
+              <div className="modal-dialog" >
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Modal title</h5>
+                    <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div className="modal-body">
+                    <p>Modal body text goes here.</p>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-primary">Save changes</button>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="float-right">
               <ul class="nav" onClick={this.handleSort.bind(this)}>
                 <li class="nav-item">
@@ -215,7 +291,7 @@ export default class ResultsComponent extends React.Component {
               <div className="col-lg-3">
                 <FacetComponent filterOption={this.state.filterOption} options={this.state.options} filterSelected={this.filterSelected.bind(this)} />
               </div>
-              <div className="offset-lg-1 col-lg-8">
+              <div className="offset-lg-1 col-lg-8" onClick={this.handleBooking.bind(this)}>
                 { this.state.data.map(br =>
                 <BusResultComponent travelName={br.travel.name} fromPlace={br.route.fromPlaceCode.name} toPlace={br.route.toPlaceCode.name} time={br.time} rating={br.rating} fare={ br.fare} />) }
               </div>
