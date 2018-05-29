@@ -11,6 +11,9 @@ import BusResultComponent from "./BusResultComponent";
 import FacetComponent from "./FacetComponent";
 import $ from 'jquery';
 import _ from 'underscore'
+import SockJsClient from 'react-stomp';
+import Stomp from 'stompjs';
+import SockJS from 'sockjs-client'
 
 
 
@@ -26,6 +29,8 @@ export default class ResultsComponent extends React.Component {
         options: [],
         sortState : ""
       };
+
+
 
       this.travelsSelected = [];
 
@@ -116,7 +121,6 @@ export default class ResultsComponent extends React.Component {
       this.changePageData();
 
     }
-
 
     filterSelected(e) {
 
@@ -219,9 +223,39 @@ export default class ResultsComponent extends React.Component {
         this.sortAndUpdateState(this.state.data, sortOption);
     }
 
-    handleBooking(){
+    handleBooking(e){
+      $(".modal").css("display",'block');
+      $("#container").css("opacity","0.2");
+    }
+
+    submitBooking(){
+
+      this.connect();
+
 
     }
+
+   sendMsg() {
+        this.stompClient.send("http://localhost:8080/app/booking", {}, "book ticket");
+    }
+
+    connect() {
+      this.socket = new SockJS('ws://localhost:8080/gs-guide-websocket');
+      this.stompClient = Stomp.over(this.socket);
+      var ref = this;
+      this.stompClient.connect({}, function (frame) {
+      //  setConnected(true);
+        console.log('Connected: ' + frame);
+
+        ref.stompClient.subscribe('http://localhost:8080/topic/ack', function (message) {
+
+          console.log(message);
+        });
+
+          ref.sendMsg();
+    });
+  }
+
 
 
     render() {
@@ -242,9 +276,7 @@ export default class ResultsComponent extends React.Component {
         }
 
         var modelPositionStyle = {
-
-          width : '400px',
-          height : '400px'
+          top : '50px'
         }
 
         var borderStyle = {
@@ -253,70 +285,74 @@ export default class ResultsComponent extends React.Component {
 
         return (
           <div id="main">
-            <div className="modal" style={modelPositionStyle}  tabindex="-1" role="dialog">
-              <div className="modal-dialog" >
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Modal title</h5>
-                    <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+
+            <div class="modal" style={modelPositionStyle} tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
                   </div>
-                  <div className="modal-body">
+                  <div class="modal-body">
                     <p>Modal body text goes here.</p>
                   </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-primary">Save changes</button>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onClick={this.submitBooking.bind(this)}>Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="float-right">
-              <ul class="nav" onClick={this.handleSort.bind(this)}>
-                <li class="nav-item">
-                  <span class="nav-link">  SORT BY: </span>
-                </li>
-                <li class="nav-item">
-                  <a id="price" class="nav-link active" href="#">PRICE</a>
-                </li>
-                <li class="nav-item"><a id="time" class="nav-link" href="#"> TIME </a>
-                </li>
-                <li class="nav-item">
-                  <a id="rating" class="nav-link" href="#">RATING</a>
-                </li>
-              </ul>
-            </div>
-            <div id="busresultscontainer" style={clearStyle} className="row">
-              <div className="col-lg-3">
-                <FacetComponent filterOption={this.state.filterOption} options={this.state.options} filterSelected={this.filterSelected.bind(this)} />
+            <div id="container">
+              <div className="float-right">
+                <ul class="nav" onClick={this.handleSort.bind(this)}>
+                  <li class="nav-item">
+                    <span class="nav-link">  SORT BY: </span>
+                  </li>
+                  <li class="nav-item">
+                    <a id="price" class="nav-link active" href="#">PRICE</a>
+                  </li>
+                  <li class="nav-item"><a id="time" class="nav-link" href="#"> TIME </a>
+                  </li>
+                  <li class="nav-item">
+                    <a id="rating" class="nav-link" href="#">RATING</a>
+                  </li>
+                </ul>
               </div>
-              <div className="offset-lg-1 col-lg-8" onClick={this.handleBooking.bind(this)}>
-                { this.state.data.map(br =>
-                <BusResultComponent travelName={br.travel.name} fromPlace={br.route.fromPlaceCode.name} toPlace={br.route.toPlaceCode.name} time={br.time} rating={br.rating} fare={ br.fare} />) }
+              <div id="busresultscontainer" style={clearStyle} className="row">
+                <div className="col-lg-3">
+                  <FacetComponent filterOption={this.state.filterOption} options={this.state.options} filterSelected={this.filterSelected.bind(this)} />
+                </div>
+                <div className="offset-lg-1 col-lg-8" onClick={this.handleBooking.bind(this)}>
+                  { this.state.data.map(br =>
+                  <BusResultComponent travelName={br.travel.name} fromPlace={br.route.fromPlaceCode.name} toPlace={br.route.toPlaceCode.name} time={br.time} rating={br.rating} fare={ br.fare} />) }
+                </div>
+              </div>
+              <div className="row">
+                <div className="offset-lg-4 col-lg-4">
+                  <nav aria-label="Page navigation example" class="float-right">
+                    <ul class="pagination" onClick={this.pickPageElement.bind(this)}>
+                      <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Previous">
+                          <span aria-hidden="true">&laquo;</span>
+                          <span class="sr-only">Previous</span>
+                        </a>
+                      </li>
+                      {elems}
+                      <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next">
+                          <span aria-hidden="true">&raquo;</span>
+                          <span class="sr-only">Next</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
               </div>
             </div>
-            <div className="row">
-              <div className="offset-lg-4 col-lg-4">
-                <nav aria-label="Page navigation example" class="float-right">
-                  <ul class="pagination" onClick={this.pickPageElement.bind(this)}>
-                    <li class="page-item">
-                      <a class="page-link" href="#" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {elems}
-                    <li class="page-item">
-                      <a class="page-link" href="#" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
+
           </div>
     )
   }
